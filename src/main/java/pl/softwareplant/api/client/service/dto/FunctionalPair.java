@@ -12,10 +12,7 @@ import pl.softwareplant.api.client.dto.PeopleDto;
 @AllArgsConstructor
 @Accessors(fluent = true, chain = true)
 public class FunctionalPair {
-
     Integer maxPossibleIteration;
 
     PeopleDto firstCallInitResult;
-
-
 }

@@ -8,12 +8,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.softwareplant.api.client.SwapiClient;
 import pl.softwareplant.api.client.dto.CharacterDetails;
+import pl.softwareplant.api.client.dto.FilmDetailsDto;
 import pl.softwareplant.api.client.dto.HomeWorldPlanetDto;
 import pl.softwareplant.api.client.dto.PeopleDto;
-import pl.softwareplant.api.client.dto.FilmDetailsDto;
 import pl.softwareplant.api.client.service.IntegrationService;
 import pl.softwareplant.api.client.service.dto.FunctionalPair;
-import pl.softwareplant.api.client.service.dto.FunctionalSearchCriteria;
 import pl.softwareplant.api.utils.PageCounterUtils;
 import pl.softwareplant.api.utils.StringUtility;
 import pl.softwareplant.api.web.dto.QueryCriteriaDto;
@@ -21,6 +20,7 @@ import pl.softwareplant.api.web.dto.QueryCriteriaDto;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -46,60 +46,17 @@ public class IntegrationServiceImpl implements IntegrationService {
     @Value("${search.client.default.perPage:10}")
     private Integer clientDefaultPerPage;
 
-
-    private Function<QueryCriteriaDto, PeopleDto> executeInitCall = (queryCriteriaDto ->
-            swapiClient.getPeopleFromPage(clientDefaultStartPage, queryCriteriaDto.getCharacterPhrase())
-    );
-
-    /**
-     * Try to calculate, how many iteration we can make
-     */
-    private Function<PeopleDto, FunctionalPair> maxIterationCounter = (peopleDto -> FunctionalPair.builder()
-            .firstCallInitResult(peopleDto)
-            .maxPossibleIteration(PageCounterUtils.count(peopleDto.getCount(), clientDefaultPerPage, clientDefaultStartPage))
-            .build()
-    );
-
-
-    private Function<QueryCriteriaDto, FunctionalSearchCriteria> iterateAndCollectCharacters = (queryCriteriaDto -> {
-        FunctionalPair functionalPairResults = executeInitCall.andThen(maxIterationCounter).apply(queryCriteriaDto);
-
-        /*Iterator start from (x) range(startInclusive -> endInclusive)*/
-        List<CharacterDetails> characterDetailsList = IntStream.rangeClosed(2, functionalPairResults.maxPossibleIteration())
-                .parallel()
-                .mapToObj(i ->
-                        swapiClient.getPeopleFromPage(i, queryCriteriaDto.getCharacterPhrase()).getResults()
-                )
-                .flatMap(Collection::parallelStream)
-                .collect(Collectors.toList());
-
-        /*Add values form first call*/
-        characterDetailsList.addAll(functionalPairResults.firstCallInitResult().getResults());
-
-        return FunctionalSearchCriteria.builder()
-                .characterDetailsList(characterDetailsList)
-                .characterPhrase(queryCriteriaDto.getCharacterPhrase())
-                .planetName(queryCriteriaDto.getPlanetName()).build();
-    });
-
-
-    /**
-     * Filter : Iterate by characters and try to find results by search criteria - planet name
-     */
-    private Function<FunctionalSearchCriteria, List<CharacterDetails>> filterByPlanerName = (criteria ->
-            criteria.characterDetailsList()
-                    .parallelStream()
-                    .filter(characterDetails ->
-                            Objects.nonNull(findRequiredHomeWord(characterDetails.getHomeworld(), criteria.planetName()))
-                    ).collect(Collectors.toList())
-    );
-
-
     @Override
 
     public PeopleDto findPeopleByCriteria(QueryCriteriaDto queryCriteriaDto) {
 
-        List<CharacterDetails> characterDetailsList = iterateAndCollectCharacters.andThen(filterByPlanerName).apply(queryCriteriaDto);
+        FunctionalPair functionalPairResults = executeInitCall.andThen(maxIterationCounter).apply(queryCriteriaDto);
+
+        List<CharacterDetails> characterDetailsList = iterateAndCollectCharacters.apply(queryCriteriaDto, functionalPairResults.maxPossibleIteration());
+        characterDetailsList.addAll(functionalPairResults.firstCallInitResult().getResults());
+
+        filterByPlanerName.apply(queryCriteriaDto, characterDetailsList).forEach(System.out::println);
+
 
 
         return null;
@@ -126,6 +83,56 @@ public class IntegrationServiceImpl implements IntegrationService {
             log.error("Not Found Exception");
         }
 
-        return FilmDetailsDto.builder().build();
+        return null;
     }
+
+
+    /* ----- Functions ------ */
+
+    /**
+     * Execute initial call to swapi API and return the results
+     */
+    private Function<QueryCriteriaDto, PeopleDto> executeInitCall = (queryCriteriaDto ->
+            swapiClient.getPeopleFromPage(clientDefaultStartPage, queryCriteriaDto.getCharacterPhrase())
+    );
+
+
+    /**
+     * Try to calculate, how many iteration we can make
+     */
+    private Function<PeopleDto, FunctionalPair> maxIterationCounter = (peopleDto -> FunctionalPair.builder().firstCallInitResult(peopleDto)
+            .maxPossibleIteration(PageCounterUtils.count(peopleDto.getCount(), clientDefaultPerPage, clientDefaultStartPage))
+            .build()
+    );
+
+    /**
+     * All peoples from api by search criteria
+     *
+     * @param QueryCriteriaDto - search criteria
+     * @param Integer - max possible iteration
+     * @return List<CharacterDetails>
+     */
+    private BiFunction<QueryCriteriaDto, Integer, List<CharacterDetails>> iterateAndCollectCharacters = ((queryCriteriaDto, maxIterationInt) ->
+            /*Iterator start from (x) range(startInclusive -> endInclusive)*/
+            IntStream.rangeClosed(2, maxIterationInt)
+                    .parallel()
+                    .mapToObj(i ->
+                            swapiClient.getPeopleFromPage(i, queryCriteriaDto.getCharacterPhrase()).getResults()
+                    )
+                    .flatMap(Collection::parallelStream)
+                    .collect(Collectors.toList())
+    );
+
+    /**
+     * Filter : Iterate by characters and try to find results by search criteria - planet name
+     */
+    private BiFunction<QueryCriteriaDto, List<CharacterDetails>, List<CharacterDetails>> filterByPlanerName = ((criteria, listOfChatacters) ->
+            listOfChatacters
+                    .parallelStream()
+                    .filter(characterDetails ->
+                            Objects.nonNull(findRequiredHomeWord(characterDetails.getHomeworld(), criteria.getPlanetName()))
+                    ).collect(Collectors.toList())
+    );
+
+
 }

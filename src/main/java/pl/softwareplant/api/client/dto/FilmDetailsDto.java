@@ -8,6 +8,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 @AllArgsConstructor
-public class HomeWorldDto {
-    String name;
+public class FilmDetailsDto {
+    String title;
 }

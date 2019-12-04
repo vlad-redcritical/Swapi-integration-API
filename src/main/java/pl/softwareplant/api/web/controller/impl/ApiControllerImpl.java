@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-import pl.softwareplant.api.client.service.IntegrationService;
+import pl.softwareplant.api.client.events.CustomSpringEventPublisher;
 import pl.softwareplant.api.web.controller.ApiController;
 import pl.softwareplant.api.web.dto.QueryCriteriaDto;
 
@@ -14,13 +14,13 @@ import pl.softwareplant.api.web.dto.QueryCriteriaDto;
 public class ApiControllerImpl implements ApiController {
 
     @Autowired
-    IntegrationService integrationService;
+    CustomSpringEventPublisher customSpringEventPublisher;
 
     @Override
     public ResponseEntity putReport(String report_id, QueryCriteriaDto queryCriteriaDto) {
         log.info("Registered PUT request with criteria: {}", queryCriteriaDto.toString());
 
-        integrationService.findPeopleByCriteria(queryCriteriaDto);
+        customSpringEventPublisher.generateReportAndPublishAnEvent(report_id, queryCriteriaDto);
 
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }

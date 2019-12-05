@@ -16,8 +16,11 @@ public interface SwapiClient {
     PeopleDto getPeopleFromPage(@PathVariable Integer pageNum, @PathVariable String characterPhrase);
 
     @GetMapping(value = "/planets/{homeWorldId}/?search={homeWordSearchCriteria}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    HomeWorldPlanetDto getHomeWordById(@PathVariable Integer homeWorldId, @PathVariable String homeWordSearchCriteria);
+    HomeWorldPlanetDto getHomeWordById(@PathVariable Long homeWorldId, @PathVariable String homeWordSearchCriteria);
+
+    @GetMapping(value = "/planets/{planetId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    HomeWorldPlanetDto getPlanet(@PathVariable Long planetId);
 
     @GetMapping(value = "/films/{filmId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    FilmDetailsDto getFilm(@PathVariable Integer filmId);
+    FilmDetailsDto getFilm(@PathVariable Long filmId);
 }

@@ -7,10 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.softwareplant.api.client.SwapiClient;
-import pl.softwareplant.api.client.dto.CharacterDetails;
-import pl.softwareplant.api.client.dto.FilmDetailsDto;
-import pl.softwareplant.api.client.dto.HomeWorldPlanetDto;
-import pl.softwareplant.api.client.dto.PeopleDto;
+import pl.softwareplant.api.client.dto.*;
 import pl.softwareplant.api.client.service.IntegrationService;
 import pl.softwareplant.api.client.service.dto.FunctionalPair;
 import pl.softwareplant.api.utils.PageCounterUtils;
@@ -48,24 +45,22 @@ public class IntegrationServiceImpl implements IntegrationService {
 
     @Override
 
-    public PeopleDto findPeopleByCriteria(QueryCriteriaDto queryCriteriaDto) {
+    public List<CharacterDetailsResults> findPeopleByCriteria(QueryCriteriaDto queryCriteriaDto) {
 
         FunctionalPair functionalPairResults = executeInitCall.andThen(maxIterationCounter).apply(queryCriteriaDto);
 
         List<CharacterDetails> characterDetailsList = iterateAndCollectCharacters.apply(queryCriteriaDto, functionalPairResults.maxPossibleIteration());
         characterDetailsList.addAll(functionalPairResults.firstCallInitResult().getResults());
 
-        filterByPlanerName.apply(queryCriteriaDto, characterDetailsList).forEach(System.out::println);
-
-
-
-        return null;
+        return filterByPlanetName.andThen(iterateAndCollectInfo).apply(queryCriteriaDto, characterDetailsList);
     }
 
     @Override
-    public HomeWorldPlanetDto findRequiredHomeWord(String homeWordUrl, String homeWordSearchCriteria) throws FeignException {
-        final Integer idHomeWord = StringUtility.parseIdFromUrl(homeWordUrl);
-
+    public HomeWorldPlanetDto findRequiredHomeWord(String homeWordUrl, String homeWordSearchCriteria) {
+        final Long idHomeWord = StringUtility.parseIdFromUrl(homeWordUrl);
+        /*TODO Cache
+         * No need to make once-again the same execution
+         * */
         try {
             return swapiClient.getHomeWordById(idHomeWord, homeWordSearchCriteria);
         } catch (FeignException e) {
@@ -75,8 +70,25 @@ public class IntegrationServiceImpl implements IntegrationService {
     }
 
     @Override
+    public HomeWorldPlanetDto findPlanet(String homeWordUrl) {
+        final Long idHomeWord = StringUtility.parseIdFromUrl(homeWordUrl);
+        /*TODO Cache
+         * No need to make once-again the same execution
+         * */
+        try {
+            return swapiClient.getPlanet(idHomeWord);
+        } catch (FeignException e) {
+            log.error("Not Found Exception");
+        }
+        return null;
+    }
+
+    @Override
     public FilmDetailsDto findFilm(String filmUrl) {
-        final Integer filmId = StringUtility.parseIdFromUrl(filmUrl);
+        final Long filmId = StringUtility.parseIdFromUrl(filmUrl);
+        /*TODO Cache
+         * No need to make once-again the same execution
+         * */
         try {
             return swapiClient.getFilm(filmId);
         } catch (FeignException e) {
@@ -116,9 +128,7 @@ public class IntegrationServiceImpl implements IntegrationService {
             /*Iterator start from (x) range(startInclusive -> endInclusive)*/
             IntStream.rangeClosed(2, maxIterationInt)
                     .parallel()
-                    .mapToObj(i ->
-                            swapiClient.getPeopleFromPage(i, queryCriteriaDto.getCharacterPhrase()).getResults()
-                    )
+                    .mapToObj(i -> swapiClient.getPeopleFromPage(i, queryCriteriaDto.getCharacterPhrase()).getResults())
                     .flatMap(Collection::parallelStream)
                     .collect(Collectors.toList())
     );
@@ -126,13 +136,40 @@ public class IntegrationServiceImpl implements IntegrationService {
     /**
      * Filter : Iterate by characters and try to find results by search criteria - planet name
      */
-    private BiFunction<QueryCriteriaDto, List<CharacterDetails>, List<CharacterDetails>> filterByPlanerName = ((criteria, listOfChatacters) ->
-            listOfChatacters
+    private BiFunction<QueryCriteriaDto, List<CharacterDetails>, List<CharacterDetails>> filterByPlanetName = ((criteria, listOfCharacters) ->
+            listOfCharacters
                     .parallelStream()
                     .filter(characterDetails ->
                             Objects.nonNull(findRequiredHomeWord(characterDetails.getHomeworld(), criteria.getPlanetName()))
                     ).collect(Collectors.toList())
     );
 
+
+    private BiFunction<CharacterDetails, String, CharacterDetailsResults> iterateAndCombineResults = ((characterDetails, filmUrl) ->
+            CharacterDetailsResults.builder()
+                    .filmId(StringUtility.parseIdFromUrl(filmUrl))
+                    .filmName(findFilm(filmUrl).getTitle())
+                    .characterId(StringUtility.parseIdFromUrl(characterDetails.getUrl()))
+                    .characterName(characterDetails.getName())
+                    .planetId(StringUtility.parseIdFromUrl(characterDetails.getHomeworld()))
+                    .planetName(findPlanet(characterDetails.getHomeworld()).getName())
+                    .build()
+
+    );
+
+
+    private Function<List<CharacterDetails>, List<CharacterDetailsResults>> iterateAndCollectInfo = (characterDetailsList ->
+            characterDetailsList
+                    .parallelStream()
+                    .map(
+                            characterDetails -> characterDetails.getFilms()
+                                    .parallelStream()
+                                    .map(
+                                            filmUrl -> iterateAndCombineResults.apply(characterDetails, filmUrl)
+                                    )
+                                    .collect(Collectors.toList())
+                    ).flatMap(Collection::parallelStream)
+                    .collect(Collectors.toList())
+    );
 
 }

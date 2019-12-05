@@ -6,7 +6,7 @@ import java.util.Objects;
 
 @UtilityClass
 public class StringUtility {
-    public static Integer parseIdFromUrl(final String url) {
+    public static Long parseIdFromUrl(final String url) {
         if (Objects.isNull(url))
             return null;
 
@@ -14,6 +14,6 @@ public class StringUtility {
 
         int maxLength = splitArr.length - 1;
 
-        return Integer.valueOf(splitArr[maxLength]);
+        return Long.valueOf(splitArr[maxLength]);
     }
 }

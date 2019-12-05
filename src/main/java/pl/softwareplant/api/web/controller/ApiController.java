@@ -11,16 +11,16 @@ import javax.validation.Valid;
 public interface ApiController {
 
     @PutMapping(value = "/{report_id}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity putReport(@PathVariable String report_id, @Valid @RequestBody QueryCriteriaDto queryCriteriaDto);
+    ResponseEntity putReport(@PathVariable Long report_id, @Valid @RequestBody QueryCriteriaDto queryCriteriaDto);
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity getAllReports();
 
     @GetMapping(value = "/{report_id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity getReport(@PathVariable String report_id);
+    ResponseEntity getReport(@PathVariable Long report_id);
 
     @DeleteMapping(value = "/{report_id}")
-    ResponseEntity deleteReport(@PathVariable String report_id);
+    ResponseEntity deleteReport(@PathVariable Long report_id);
 
     @DeleteMapping
     ResponseEntity deleteAllReports();

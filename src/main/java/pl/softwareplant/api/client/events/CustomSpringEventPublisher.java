@@ -13,7 +13,7 @@ public class CustomSpringEventPublisher {
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
 
-    public void generateReportAndPublishAnEvent(final String report_id, final QueryCriteriaDto queryCriteriaDto) {
+    public void generateReportAndPublishAnEvent(final Long report_id, final QueryCriteriaDto queryCriteriaDto) {
         log.info("Publishing custom event for report generation...");
         ReportGenerationSpringEvent customSpringEvent = new ReportGenerationSpringEvent(report_id, queryCriteriaDto);
         applicationEventPublisher.publishEvent(customSpringEvent);

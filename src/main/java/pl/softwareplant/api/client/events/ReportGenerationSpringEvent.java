@@ -8,11 +8,11 @@ import pl.softwareplant.api.web.dto.QueryCriteriaDto;
 @Getter
 @ToString
 public class ReportGenerationSpringEvent extends ApplicationEvent {
-    private String report_id;
+    private Long report_id;
 
     private QueryCriteriaDto queryCriteriaDto;
 
-    ReportGenerationSpringEvent(String report_id, QueryCriteriaDto queryCriteriaDto) {
+    ReportGenerationSpringEvent(Long report_id, QueryCriteriaDto queryCriteriaDto) {
         super("");
         this.report_id = report_id;
         this.queryCriteriaDto = queryCriteriaDto;

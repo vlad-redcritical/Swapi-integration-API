@@ -1,6 +1,5 @@
 package pl.softwareplant.api.client.service.impl;
 
-import com.github.benmanes.caffeine.cache.Cache;
 import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,12 +28,6 @@ public class IntegrationServiceImpl implements IntegrationService {
 
     @Autowired
     SwapiClient swapiClient;
-
-    @Autowired
-    Cache<Integer, String> planetsCache;
-
-    @Autowired
-    Cache<Integer, String> filmsCache;
 
     @Value("${search.client.default.startPage:1}")
     private Integer clientDefaultStartPage;

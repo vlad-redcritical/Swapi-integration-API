@@ -9,5 +9,6 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 public class HomeWorldPlanetDto {
-    String name;
+    @Builder.Default
+    String name = "";
 }

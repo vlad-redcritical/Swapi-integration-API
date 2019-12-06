@@ -60,13 +60,14 @@ public class IntegrationServiceImpl implements IntegrationService {
         final Long idHomeWord = StringUtility.parseIdFromUrl(homeWordUrl);
         /*TODO Cache
          * No need to make once-again the same execution
+         * AsyncLoadingCache Caffeine -> CompletableFuture
          * */
         try {
             return swapiClient.getHomeWordById(idHomeWord, homeWordSearchCriteria);
-        } catch (FeignException e) {
-            log.error("Not Found Exception");
+        } catch (FeignException ex) {
+            log.error("Not Found Exception : homeWordUrl: {}, homeWordSearchCriteria: {}, exception: {}", homeWordUrl, homeWordSearchCriteria, ex);
+            return null;
         }
-        return null;
     }
 
     @Override
@@ -74,13 +75,14 @@ public class IntegrationServiceImpl implements IntegrationService {
         final Long idHomeWord = StringUtility.parseIdFromUrl(homeWordUrl);
         /*TODO Cache
          * No need to make once-again the same execution
+         * AsyncLoadingCache Caffeine -> CompletableFuture
          * */
         try {
             return swapiClient.getPlanet(idHomeWord);
-        } catch (FeignException e) {
-            log.error("Not Found Exception");
+        } catch (FeignException ex) {
+            log.error("Not Found Exception : homeWordUrl: {}, exception: {}", homeWordUrl, ex);
+            return null;
         }
-        return null;
     }
 
     @Override
@@ -88,14 +90,14 @@ public class IntegrationServiceImpl implements IntegrationService {
         final Long filmId = StringUtility.parseIdFromUrl(filmUrl);
         /*TODO Cache
          * No need to make once-again the same execution
+         * AsyncLoadingCache Caffeine -> CompletableFuture
          * */
         try {
             return swapiClient.getFilm(filmId);
-        } catch (FeignException e) {
-            log.error("Not Found Exception");
+        } catch (FeignException ex) {
+            log.error("Not Found Exception: filmUrl: {}, exception: {}", filmUrl, ex);
+            return null;
         }
-
-        return null;
     }
 
 
@@ -145,7 +147,10 @@ public class IntegrationServiceImpl implements IntegrationService {
     );
 
 
-    private BiFunction<CharacterDetails, String, CharacterDetailsResults> iterateAndCombineResults = ((characterDetails, filmUrl) ->
+    /**
+     * Build splitter film result, with required data
+     */
+    private BiFunction<CharacterDetails, String, CharacterDetailsResults> buildObjectResult = ((characterDetails, filmUrl) ->
             CharacterDetailsResults.builder()
                     .filmId(StringUtility.parseIdFromUrl(filmUrl))
                     .filmName(findFilm(filmUrl).getTitle())
@@ -157,7 +162,9 @@ public class IntegrationServiceImpl implements IntegrationService {
 
     );
 
-
+    /**
+     * Iterate by character, and provide qualifier per film
+     */
     private Function<List<CharacterDetails>, List<CharacterDetailsResults>> iterateAndCollectInfo = (characterDetailsList ->
             characterDetailsList
                     .parallelStream()
@@ -165,7 +172,7 @@ public class IntegrationServiceImpl implements IntegrationService {
                             characterDetails -> characterDetails.getFilms()
                                     .parallelStream()
                                     .map(
-                                            filmUrl -> iterateAndCombineResults.apply(characterDetails, filmUrl)
+                                            filmUrl -> buildObjectResult.apply(characterDetails, filmUrl)
                                     )
                                     .collect(Collectors.toList())
                     ).flatMap(Collection::parallelStream)

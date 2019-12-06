@@ -9,5 +9,6 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FilmDetailsDto {
-    String title;
+    @Builder.Default
+    String title = "";
 }

@@ -9,6 +9,7 @@ import pl.softwareplant.api.client.dto.FilmDetailsDto;
 import pl.softwareplant.api.client.dto.HomeWorldPlanetDto;
 import pl.softwareplant.api.client.dto.PeopleDto;
 
+/*TODO Provide error decoder, circuit breaker and hystrix fallback */
 @FeignClient(value = "swapiclient", url = "https://swapi.co/api", configuration = ClientConfig.class)
 public interface SwapiClient {
 

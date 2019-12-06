@@ -16,17 +16,17 @@ If you want to check database records and relations, please run the application 
 * Database : H2 memory
 
 
-###Build
+### Build
 * Fat war with all dependencies: <b>jedi-api.war</b> 
 
-###Application settings
+### Application settings
 * Standart port: <b>8080</b>
 * application.name <b> swapi-integration-api </b>
 * jmx.default-domain <b> swapi-integration-api </b>
 
 
 
-###Maybe in feature / TODO
+### Maybe in feature / TODO
 * Caffeine cache with async - CompletableFeature
 * Feign ErrorDecoder
 * Hystrix FallbackFactory / Dashboard

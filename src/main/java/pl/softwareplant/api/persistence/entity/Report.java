@@ -30,6 +30,7 @@ public class Report {
     @JsonProperty("query_criteria_planet_name")
     String planetName;
 
+    @JsonProperty("result")
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "report")
     List<ReportDetails> reportDetails;
 }

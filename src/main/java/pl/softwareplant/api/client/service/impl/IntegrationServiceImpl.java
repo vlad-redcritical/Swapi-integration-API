@@ -1,10 +1,12 @@
 package pl.softwareplant.api.client.service.impl;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import pl.softwareplant.api.aop.ExecutionTimeLogger;
 import pl.softwareplant.api.client.SwapiClient;
 import pl.softwareplant.api.client.dto.*;
 import pl.softwareplant.api.client.service.IntegrationService;
@@ -25,6 +27,11 @@ import java.util.stream.IntStream;
 @Service
 public class IntegrationServiceImpl implements IntegrationService {
 
+    @Autowired
+    Cache<String, String> planetHomeWordCache;
+
+    @Autowired
+    Cache<String, String> filmsDetailsCache;
 
     @Autowired
     SwapiClient swapiClient;
@@ -36,8 +43,8 @@ public class IntegrationServiceImpl implements IntegrationService {
     @Value("${search.client.default.perPage:10}")
     private Integer clientDefaultPerPage;
 
+    @ExecutionTimeLogger
     @Override
-
     public List<CharacterDetailsResults> findPeopleByCriteria(QueryCriteriaDto queryCriteriaDto) {
 
         FunctionalPair functionalPairResults = executeInitCall.andThen(maxIterationCounter).apply(queryCriteriaDto);
@@ -50,13 +57,16 @@ public class IntegrationServiceImpl implements IntegrationService {
 
     @Override
     public HomeWorldPlanetDto findRequiredHomeWord(String homeWordUrl, String homeWordSearchCriteria) {
-        final Long idHomeWord = StringUtility.parseIdFromUrl(homeWordUrl);
-        /*TODO Cache
-         * No need to make once-again the same execution
-         * AsyncLoadingCache Caffeine -> CompletableFuture
-         * */
         try {
-            return swapiClient.getHomeWordById(idHomeWord, homeWordSearchCriteria);
+            HomeWorldPlanetDto homeWordResult = swapiClient.getHomeWordById(StringUtility.parseIdFromUrl(homeWordUrl), homeWordSearchCriteria);
+            /*
+             * If response from client not eq null and homeword planet not in the cache, put value into cache
+             * */
+            if (Objects.nonNull(homeWordResult) && Objects.isNull(planetHomeWordCache.getIfPresent(homeWordUrl))) {
+                planetHomeWordCache.put(homeWordUrl, homeWordResult.getName());
+            }
+
+            return homeWordResult;
         } catch (FeignException ex) {
             log.error("Not Found Exception : homeWordUrl: {}, homeWordSearchCriteria: {}, exception: {}", homeWordUrl, homeWordSearchCriteria, ex);
             return null;
@@ -65,13 +75,17 @@ public class IntegrationServiceImpl implements IntegrationService {
 
     @Override
     public HomeWorldPlanetDto findPlanet(String homeWordUrl) {
-        final Long idHomeWord = StringUtility.parseIdFromUrl(homeWordUrl);
-        /*TODO Cache
-         * No need to make once-again the same execution
-         * AsyncLoadingCache Caffeine -> CompletableFuture
+
+        /*
+         * If planet name already exists in the cache, why need to ask once-again about that? We can get it from the cache..
          * */
+        final String planetName = planetHomeWordCache.getIfPresent(homeWordUrl);
+        if (Objects.nonNull(planetName)) {
+            return HomeWorldPlanetDto.builder().name(planetName).build();
+        }
+
         try {
-            return swapiClient.getPlanet(idHomeWord);
+            return swapiClient.getPlanet(StringUtility.parseIdFromUrl(homeWordUrl));
         } catch (FeignException ex) {
             log.error("Not Found Exception : homeWordUrl: {}, exception: {}", homeWordUrl, ex);
             return null;
@@ -80,13 +94,18 @@ public class IntegrationServiceImpl implements IntegrationService {
 
     @Override
     public FilmDetailsDto findFilm(String filmUrl) {
-        final Long filmId = StringUtility.parseIdFromUrl(filmUrl);
-        /*TODO Cache
-         * No need to make once-again the same execution
-         * AsyncLoadingCache Caffeine -> CompletableFuture
+
+
+        FilmDetailsDto filmResult = swapiClient.getFilm(StringUtility.parseIdFromUrl(filmUrl));
+        /*
+         * If response from client not eq null and film title not in the cache, put value into cache
          * */
+        if (Objects.nonNull(filmResult) && Objects.isNull(planetHomeWordCache.getIfPresent(filmUrl))) {
+            filmsDetailsCache.put(filmUrl, filmResult.getTitle());
+        }
+
         try {
-            return swapiClient.getFilm(filmId);
+            return filmResult;
         } catch (FeignException ex) {
             log.error("Not Found Exception: filmUrl: {}, exception: {}", filmUrl, ex);
             return null;

@@ -1,6 +1,8 @@
 # Swapi-integration-API
 ###`May the Force be with you.....`
 
+![Image of Joda](https://lh4.googleusercontent.com/9orm24IXIPFvsTZGi5lhdQMmDsRGDNk_gmXP-tB0oXII0Beq55ChdFkJxBVdi2kn3ksMUnjvQOwFOGoKCnic=w1920-h930)
+
 
 ### Stack
 * Java 11 (v. 11.0.3)

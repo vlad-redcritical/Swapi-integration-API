@@ -1,9 +1,11 @@
 package pl.softwareplant.api.utils;
 
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Objects;
 
+@Slf4j
 @UtilityClass
 public class StringUtility {
     public static Long parseIdFromUrl(final String url) {
@@ -14,6 +16,11 @@ public class StringUtility {
 
         int maxLength = splitArr.length - 1;
 
-        return Long.valueOf(splitArr[maxLength]);
+        try {
+            return Long.valueOf(splitArr[maxLength]);
+        } catch (NumberFormatException ex) {
+            log.error("NumberFormatException - details: {}, message {}", ex, ex.getMessage());
+            return null;
+        }
     }
 }

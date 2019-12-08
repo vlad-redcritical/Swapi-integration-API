@@ -57,6 +57,9 @@ public class IntegrationServiceImpl implements IntegrationService {
 
     @Override
     public HomeWorldPlanetDto findRequiredHomeWord(String homeWordUrl, String homeWordSearchCriteria) {
+        if (Objects.isNull(homeWordUrl) || Objects.isNull(homeWordSearchCriteria))
+            return null;
+
         try {
             HomeWorldPlanetDto homeWordResult = swapiClient.getHomeWordById(StringUtility.parseIdFromUrl(homeWordUrl), homeWordSearchCriteria);
             /*
@@ -75,7 +78,8 @@ public class IntegrationServiceImpl implements IntegrationService {
 
     @Override
     public HomeWorldPlanetDto findPlanet(String homeWordUrl) {
-
+        if (Objects.isNull(homeWordUrl))
+            return null;
         /*
          * If planet name already exists in the cache, why need to ask once-again about that? We can get it from the cache..
          * */
@@ -94,7 +98,8 @@ public class IntegrationServiceImpl implements IntegrationService {
 
     @Override
     public FilmDetailsDto findFilm(String filmUrl) {
-
+        if (Objects.isNull(filmUrl))
+            return null;
 
         FilmDetailsDto filmResult = swapiClient.getFilm(StringUtility.parseIdFromUrl(filmUrl));
         /*

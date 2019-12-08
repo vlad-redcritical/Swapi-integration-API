@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static pl.softwareplant.api.utils.MapperBuildUtils.*;
+
 @Service
 public class ReportServiceImpl implements ReportService {
 
@@ -61,28 +63,5 @@ public class ReportServiceImpl implements ReportService {
                 .collect(Collectors.toList());
 
         reportDetailsRepository.saveAll(reportDetailsList);
-
     }
-
-    private Report buildReportEntity(Long reportId, QueryCriteriaDto criteriaDto) {
-        return Report.builder()
-                .id(reportId)
-                .characterPhrase(criteriaDto.getCharacterPhrase())
-                .planetName(criteriaDto.getPlanetName())
-                .build();
-    }
-
-
-    private ReportDetails buildReportDetailsEntity(CharacterDetailsResults result, Report reportEntity) {
-        return ReportDetails.builder()
-                .filmId(result.filmId())
-                .filmName(result.filmName())
-                .characterId(result.characterId())
-                .characterName(result.characterName())
-                .planetId(result.planetId())
-                .planetName(result.planetName())
-                .report(reportEntity).build();
-    }
-
-
 }

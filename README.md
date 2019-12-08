@@ -92,4 +92,3 @@ TimeLogger      : Report generation info: className=com.yourpath.api.client.serv
 * Feign Circuit Breaker
 * Actuator for request history
 * @FunctionalInterface
-* Tests

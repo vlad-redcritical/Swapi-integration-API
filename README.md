@@ -24,7 +24,7 @@ logging.level.pl.softwareplant.api.client.SwapiClient:DEBUG
 hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds = 5000 // 5 seconds and timeout for client request 
 ```
 
-#### Hystrix endpoint
+### Hystrix endpoint
 You can connect your Hystrix Panel / Turbine Cluster to application hystrix stream: 
 http://localhost:8080/hystrix.stream
 for example: 
@@ -32,7 +32,7 @@ http://YourAppClusterTurbine/hystrix/monitor?stream=http%3A%2F%2Flocalhost%3A808
 
 ![Image of Hystrix Panel](https://scontent-waw1-1.xx.fbcdn.net/v/t1.15752-9/78957281_2385491351780456_5634327850547937280_n.png?_nc_cat=102&_nc_ohc=0O4fFQuxOxsAQlalYnS7qQSDKKpfzUwIwVbBtui8q7h4puK3dJgypB6vQ&_nc_ht=scontent-waw1-1.xx&oh=c669fbe89f6c5fc6e7e369d97e5b48f7&oe=5E66C38C)
 
-#### H2 Database configuration
+### H2 Database configuration
 ```
 spring.datasource.url=jdbc:h2:mem:starwars
 spring.datasource.driverClassName=org.h2.Driver
@@ -42,7 +42,7 @@ spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
 spring.h2.console.enabled=true
 ```
 
-#### Client search settings
+### Client search settings
 ```
 search.client.default.startPage=1
 search.client.default.perPage=10

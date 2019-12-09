@@ -4,13 +4,18 @@
 
 ### Stack
 * Java 11 (v. 11.0.3)
-* Spring : Boot, Cloud, Web, Data, Tests
+* Spring : Boot, Web, Data, Tests
+* Spring Cloud : OpenFeign, Hystrix
 * Database : H2 memory
+* Actuator / Lombok
+* JUnit 5
 * Caffeine Cache
 * AOP
+* Maven
 
 ### Build
-* Fat war with all dependencies: <b>jedi-api.war</b> 
+* Execute <b>mvn clean install</b>, it's start building process with test validation
+* If process will be successful in target folder you should find war with all dependencies: <b>jedi-api.war</b> 
 
 ### Application settings
 #### Spring boot configuration

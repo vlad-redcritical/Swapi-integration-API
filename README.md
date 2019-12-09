@@ -94,8 +94,5 @@ TimeLogger      : Report generation info: className=com.yourpath.api.client.serv
 
 
 ### Maybe in feature / TODO
-* Feign ErrorDecoder
-* Hystrix FallbackFactory / Dashboard
 * Feign Circuit Breaker
-* Actuator for request history
 * @FunctionalInterface

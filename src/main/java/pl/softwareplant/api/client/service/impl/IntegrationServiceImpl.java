@@ -1,7 +1,6 @@
 package pl.softwareplant.api.client.service.impl;
 
 import com.github.benmanes.caffeine.cache.Cache;
-import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -65,20 +64,15 @@ public class IntegrationServiceImpl implements IntegrationService {
         if (Objects.isNull(homeWordUrl) || Objects.isNull(homeWordSearchCriteria))
             return null;
 
-        try {
-            HomeWorldPlanetDto homeWordResult = swapiClient.getHomeWordById(StringUtility.parseIdFromUrl(homeWordUrl), homeWordSearchCriteria);
-            /*
-             * If response from client not eq null and homeword planet not in the cache, put value into cache
-             * */
-            if (Objects.nonNull(homeWordResult) && Objects.isNull(planetHomeWordCache.getIfPresent(homeWordUrl))) {
-                planetHomeWordCache.put(homeWordUrl, homeWordResult.getName());
-            }
-
-            return homeWordResult;
-        } catch (FeignException ex) {
-            log.error("Not Found Exception : homeWordUrl: {}, homeWordSearchCriteria: {}, exception: {}", homeWordUrl, homeWordSearchCriteria, ex);
-            return null;
+        HomeWorldPlanetDto homeWordResult = swapiClient.getHomeWordById(StringUtility.parseIdFromUrl(homeWordUrl), homeWordSearchCriteria);
+        /*
+         * If response from client not eq null and homeword planet not in the cache, put value into cache
+         * */
+        if (Objects.nonNull(homeWordResult) && Objects.isNull(planetHomeWordCache.getIfPresent(homeWordUrl))) {
+            planetHomeWordCache.put(homeWordUrl, homeWordResult.getName());
         }
+
+        return homeWordResult;
     }
 
     @Override
@@ -93,12 +87,7 @@ public class IntegrationServiceImpl implements IntegrationService {
             return HomeWorldPlanetDto.builder().name(planetName).build();
         }
 
-        try {
-            return swapiClient.getPlanet(StringUtility.parseIdFromUrl(homeWordUrl));
-        } catch (FeignException ex) {
-            log.error("Not Found Exception : homeWordUrl: {}, exception: {}", homeWordUrl, ex);
-            return null;
-        }
+        return swapiClient.getPlanet(StringUtility.parseIdFromUrl(homeWordUrl));
     }
 
     @Override
@@ -114,12 +103,7 @@ public class IntegrationServiceImpl implements IntegrationService {
             filmsDetailsCache.put(filmUrl, filmResult.getTitle());
         }
 
-        try {
-            return filmResult;
-        } catch (FeignException ex) {
-            log.error("Not Found Exception: filmUrl: {}, exception: {}", filmUrl, ex);
-            return null;
-        }
+        return filmResult;
     }
 
 

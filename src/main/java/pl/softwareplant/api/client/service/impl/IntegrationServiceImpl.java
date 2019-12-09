@@ -50,6 +50,11 @@ public class IntegrationServiceImpl implements IntegrationService {
         FunctionalPair functionalPairResults = executeInitCall.andThen(maxIterationCounter).apply(queryCriteriaDto);
 
         List<CharacterDetails> characterDetailsList = iterateAndCollectCharacters.apply(queryCriteriaDto, functionalPairResults.maxPossibleIteration());
+
+        /**
+         * Add elements from 1 iteration
+         * Also we can provide additional function, or BiFunction, but i want to keep that step simple as possible.
+         * */
         characterDetailsList.addAll(functionalPairResults.firstCallInitResult().getResults());
 
         return filterByPlanetName.andThen(iterateAndCollectInfo).apply(queryCriteriaDto, characterDetailsList);

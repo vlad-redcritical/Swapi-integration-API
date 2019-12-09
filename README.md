@@ -23,7 +23,14 @@ spring.jmx.default-domain=swapi-integration-api
 #### Spring cloud configuration
 ```
 logging.level.pl.softwareplant.api.client.SwapiClient:DEBUG
+hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds = 5000 // 5 seconds and timeout for client request 
 ```
+
+#### Hystrix endpoint
+You can connect your Hystrix Panel / Turbine Cluster to application hystrix stream: 
+http://localhost:8080/hystrix.stream
+for example: 
+http://YourAppClusterTurbine/hystrix/monitor?stream=http%3A%2F%2Flocalhost%3A8080%2Fhystrix.stream
 
 #### H2 Database configuration
 ```
